@@ -26,7 +26,6 @@ export class AppComponent implements OnInit {
   constructor(private poetryService: PoetryService) {}
 
   ngOnInit() {
-    // Demonstrate API calls on component initialization
     this.demonstrateApiCalls();
   }
 
@@ -34,45 +33,49 @@ export class AppComponent implements OnInit {
    * Demonstrate various API calls with error handling
    */
   private demonstrateApiCalls() {
-    console.log('🚀 Starting PoetryDB API demonstration...');
+    console.log('Starting PoetryDB API demonstration...');
     
     // Test with Shakespeare
-    this.poetryService.getPoemsByAuthor('Shakespeare');
+    this.poetryService.getPoemsByAuthorAndTitle('Shakespeare', 'Sonnet 33')
+      .subscribe({
+        next: poems => {
+          console.log('Poems by Shakespeare: ', poems);
+          this.poems = poems;
+        },
+        error: err => {
+          console.error('Error fetching Sharespeare poems')
+        }
+      });
     
-    // Test with poem Title
-    setTimeout(() => {
-      this.poetryService.getPoemsByTitle('We should not mind so small a flower');
-    }, 2000);
   }
 
-  /**
-   * Search for specific poem
-   */
-//   searchSpecificPoem(author: string, title: string) {
-//     console.log(`🔍 Searching for specific poem: "${title}" by ${author}`);
-    
-//     this.poetryService.getPoemByAuthorAndTitle(author, title).subscribe({
-//       next: (poems) => {
-//         console.log('✅ Specific poem search completed');
-//       },
-//       error: (error: PoetryApiError) => {
-//         console.error('🚨 Specific poem search failed:', error);
-//       }
-//     });
-//   }
 
   /**
    * Handle form submission
    */
-  onSearch() {
-    if (!this.authorInput.trim()) {
-      this.error = 'Please enter an author name';
-      return;
-    }
+  onSubmit() {
+    const author = this.authorInput.trim();
+    const title = this.titleInput.trim();
 
-    const title = this.titleInput.trim() || undefined;
-    console.log(this.authorInput);
-    this.poetryService.getPoemsByAuthor(this.authorInput.trim());
+    if (author && title) {
+      this.poetryService.getPoemsByAuthorAndTitle(author, title)
+        .subscribe({
+          next: poems => this.poems = poems,
+          error: err => this.error = err.message
+        });
+    } else if (!title) {
+      this.poetryService.getPoemsByAuthor(author)
+        .subscribe({
+          next: poems => this.poems = poems,
+          error: err => this.error = err.message
+        });;
+    } else {
+      this.poetryService.getPoemsByTitle(title)
+        .subscribe({
+          next: poems => this.poems = poems,
+          error: err => this.error = err.message
+        });;
+    }
   }
 
   /**

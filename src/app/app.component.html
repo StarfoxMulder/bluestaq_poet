@@ -1,11 +1,10 @@
 <div class="container">
   <header>
     <h1>{{ title }}</h1>
-    <p>Explore poetry using the PoetryDB API</p>
+    <p>Demonstrating API endpoint utilization for Bluestaq</p>
   </header>
 
   <section class="search-section">
-    <h2>Search Poetry</h2>
     <div class="search-form">
       <div class="form-group">
         <label for="author">Author:</label>
@@ -18,7 +17,7 @@
       </div>
       
       <div class="form-group">
-        <label for="title">Title (optional):</label>
+        <label for="title">Title:</label>
         <input 
           type="text" 
           id="title"
@@ -27,7 +26,7 @@
           class="form-control">
       </div>
       
-      <button (click)="onSearch()" [disabled]="loading" class="btn btn-primary">
+      <button (click)="onSubmit()" [disabled]="loading" class="btn btn-primary">
         {{ loading ? 'Searching...' : 'Search Poetry' }}
       </button>
       
@@ -54,7 +53,7 @@
 
       @if (poems.length > 0 && !loading) {
         <div class="results">
-          <h3>Found {{ poems.length }} poem(s)</h3>
+          <h3>Found {{ poems.length }} poem{{poems.length > 1 ? 's' : ''}}</h3>
           
           @for (poem of poems; track poem.title) {
             <div class="poem-card">
@@ -85,6 +84,6 @@
 
   <section class="console-info">
     <h3>Developer Console</h3>
-    <p>Check your browser's developer console (F12) to see detailed API logs and error handling demonstrations.</p>
+    <p>Check your browser's developer console to see detailed API logs and error handling demonstrations.</p>
   </section>
 </div>

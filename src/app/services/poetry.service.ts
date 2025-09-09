@@ -1,82 +1,101 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, tap } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { Poem } from '../models/poem.model';
 import { PoetryApiError } from '../utils/api-error';
 
 @Injectable({
-    providedIn: 'root'
+  providedIn: 'root'
 })
-
 export class PoetryService {
-    private readonly baseUrl = 'https://poetrydb.org';
+  private readonly baseUrl = 'https://poetrydb.org';
 
-    constructor(private http: HttpClient) {
-        console.log('🔧 PoetryService constructor called');
+  constructor(private http: HttpClient) {}
+
+  /*** 
+   * Response normalizer since sometimes a single item is an object instead of an array
+   */
+  private normalizeResponse(response: Poem | Poem[]): Poem[] {
+    if (Array.isArray(response)) {
+      console.log('Response is array:', response.length, 'items');
+      return response;
+    } else if (response && typeof response === 'object') {
+      console.log('Response is single object, wrapping in array');
+      return [response];
+    } else {
+      console.log('Unexpected response format:', typeof response);
+      return [];
     }
+  }
 
-    /*****
-     *  Get poems by Author
-     *  Can be full name with spaces between strings or part of a name.
-     *  Note: 'Emily Dickinson' and 'Emily Dickins' will get the same results,
-     *          however 'Emil Dickinson' will return a 404. Without more time to look,
-     *          it seems like it string matches with a * at the end.
-     */
+  /***
+   * Get poems by Author
+   */
   getPoemsByAuthor(author: string): Observable<Poem[]> {
     const endpoint = `${this.baseUrl}/author/${encodeURIComponent(author)}`;
-    
-    return this.http.get<Poem[]>(endpoint).pipe(
-      tap(poems => {
-        console.log(`✅ Successfully retrieved ${poems.length} poems by ${author}`);
-        console.log('Author data:', poems);
+    console.log('Making request to:', endpoint);
+
+    return this.http.get<Poem | Poem[]>(endpoint).pipe(
+      map(this.normalizeResponse),
+      tap((poems) => {
+        console.log(`Retrieved ${poems.length} poem${poems.length > 1 ? 's' : ''} by ${author}`);
       }),
-      catchError(error => this.handleError(error, endpoint))
+      catchError((error) => this.handleError(error, endpoint))
     );
   }
 
-    /*****
-     * Get poems by Title
-     */
-    getPoemsByTitle(title: string): Observable<Poem[]> {
-        const endpoint = `${this.baseUrl}/title/${encodeURIComponent(title)}`;
+  /***
+   * Get poems by Title
+   */
+  getPoemsByTitle(title: string): Observable<Poem[]> {
+    const endpoint = `${this.baseUrl}/title/${encodeURIComponent(title)}`;
+    console.log('Making request to:', endpoint);
 
-        return this.http.get<Poem[]>(endpoint).pipe(
-            tap(poems => {
-                console.log(`Sucessfully retrieved ${poems.length} poem${poems.length == 1 ? '' : 's'} with the title "${title}".`);
-                console.log(`Poem${poems.length == 1 ? '' : 's'} titled ${title}: `, poems);
-            }),
-            catchError(error => this.handleError(error, endpoint))
-        );
+    return this.http.get<Poem | Poem[]>(endpoint).pipe(
+      map(this.normalizeResponse),
+      tap((poems) => {
+        console.log(`Retrieved ${poems.length} poem(${poems.length > 1 ? 's' : ''} titled "${title}"`);
+      }),
+      catchError((error) => this.handleError(error, endpoint))
+    );
+  }
+
+  /***
+   * Get poems by Author and Title 
+   */
+  getPoemsByAuthorAndTitle(author: string, title: string): Observable<Poem[]> {
+    const endpoint = `${this.baseUrl}/author,title/${encodeURIComponent(author)};${encodeURIComponent(title)}`;
+    console.log('Making request to:', endpoint);
+
+    return this.http.get<Poem | Poem[]>(endpoint).pipe(
+      map(this.normalizeResponse),
+      tap((poems) => {
+        console.log(`Retrieved ${poems.length} poem${poems.length > 1 ? 's' : ''} by ${author} titled "${title}"`);
+      }),
+      catchError((error) => this.handleError(error, endpoint))
+    );
+  }
+
+  /***
+   * Error Handling 
+   */
+  private handleError(error: HttpErrorResponse, endpoint: string): Observable<never> {
+    console.error('API Error occurred:', error);
+    console.error('Endpoint:', endpoint);
+    console.error('Status:', error.status);
+    console.error('Message:', error.message);
+
+    if (error.status !== 200) {
+      const apiError = new PoetryApiError(
+        error.status,
+        endpoint,
+        error.error?.message || error.message || 'Unknown error'
+      );
+      console.error('Throwing PoetryApiError:', apiError);
+      return throwError(() => apiError);
     }
 
-    /*****
-     * Get Titles by Author
-     * 
-     * Note: I was confused by the prompt until I got to the point of writing this endpoint.
-     *  Keeping the other endpoints in since I already wrote them.
-     */
-
-
-    private handleError(error: HttpErrorResponse, endpoint: string): Observable<never> {
-        console.error('❌ API Error occurred:', error);
-        console.error('Endpoint:', endpoint);
-        console.error('Status:', error.status);
-        console.error('Message:', error.message);
-        
-        // Throw error for any non-200 status
-        if (error.status !== 200) {
-        const apiError = new PoetryApiError(
-            error.status,
-            endpoint,
-            error.error?.message || error.message || 'Unknown error'
-        );
-        console.error('🚨 Throwing PoetryApiError:', apiError);
-        return throwError(() => apiError);
-        }
-        
-        return throwError(() => error);
-    }
-
+    return throwError(() => error);
+  }
 }
-
