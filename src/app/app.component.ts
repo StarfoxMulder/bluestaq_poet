@@ -61,20 +61,32 @@ export class AppComponent implements OnInit {
       this.poetryService.getPoemsByAuthorAndTitle(author, title)
         .subscribe({
           next: poems => this.poems = poems,
-          error: err => this.error = err.message
+          error: (error: PoetryApiError) => {
+            this.error = `Error ${error.status}: ${error.message}`;
+            this.loading = false;
+            console.error('An error occured: ', error);
+          }
         });
     } else if (!title) {
       this.poetryService.getPoemsByAuthor(author)
         .subscribe({
           next: poems => this.poems = poems,
-          error: err => this.error = err.message
-        });;
+          error: (error: PoetryApiError) => {
+            this.error = `Error ${error.status}: ${error.message}`;
+            this.loading = false;
+            console.error('An error occured: ', error);
+          }
+        });
     } else {
       this.poetryService.getPoemsByTitle(title)
         .subscribe({
           next: poems => this.poems = poems,
-          error: err => this.error = err.message
-        });;
+          error: (error: PoetryApiError) => {
+            this.error = `Error ${error.status}: ${error.message}`;
+            this.loading = false;
+            console.error('An error occured: ', error);
+          }
+        });
     }
   }
 
@@ -82,7 +94,15 @@ export class AppComponent implements OnInit {
    * Test error handling with invalid data
    */
   testErrorHandling() {
-    console.log('🧪 Testing error handling with invalid author...');
-    this.poetryService.getPoemsByAuthor('NonExistentAuthor12345');
+    console.log('Testing error handling with invalid author...');
+    this.poetryService.getPoemsByAuthor('NonExistentAuthor12345')
+      .subscribe({
+        next: poems => this.poems = poems,
+        error: (error: PoetryApiError) => {
+          this.error = `Error ${error.status}: ${error.message}`;
+          this.loading = false;
+          console.error('An error occured: ', error);
+          }
+      });
   }
 }
