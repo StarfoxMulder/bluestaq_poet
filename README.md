@@ -1,6 +1,8 @@
 # BluestaqPoet
 
-For the fine people at Bluestaq to review
+For the fine people at Bluestaq to review!
+
+### Note: This is the first time I've looked at Angular in several years. Since it's something I have such limited experience with I took this as an opportunity to learn and explore a bit. I know I could have structured the files differently and probably approached other areas of the code more cleanly or efficiently, but it seemed like I might have already gone a little outside of the scope of the prompt.
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 20.2.2.
 
